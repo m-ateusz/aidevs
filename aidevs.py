@@ -1,5 +1,8 @@
+import base64
 import os
 import requests
+
+from openai import OpenAI
 
 
 def send_task(task: str, answer, url: str = 'https://centrala.ag3nts.org/report'):
@@ -31,3 +34,78 @@ def send_task(task: str, answer, url: str = 'https://centrala.ag3nts.org/report'
         print("POST request successful!")
     else:
         print(f"POST request failed. Status code: {post_response.status_code}")
+    
+
+
+def encode_image(image_path:str) -> str:
+    """
+    Encodes an image file to a base64 string.
+    
+    Parameters:
+    - image_path (str): Path to the image file to be encoded.
+    
+    Returns:
+    - str: Base64-encoded string of the image.
+    """
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
+def generate_image_completion(
+        prompt: str,
+        image_filenames: list[str],
+        system_prompt: str = "",
+        model: str = "gpt-4-vision-preview",
+        max_tokens: int = 500
+) -> str:
+    """
+    Sends a prompt with images to the OpenAI model and returns the response.
+
+    Parameters:
+    - prompt (str): User prompt describing the task or question for the images.
+    - image_filenames (list[str]): List of paths to image files to include in the prompt.
+    - system_prompt (str): Additional instructions or context for the system. Default is an empty string.
+    - model (str): The model name to use for the OpenAI API call. Default is "gpt-4-vision-preview".
+    - max_tokens (int): The maximum number of tokens to generate in the response. Default is 500.
+
+    Returns:
+    - str: The text response from the OpenAI API, containing the model's reply.
+
+    Raises:
+    - Exception: If there's an error in the API call or processing the response.
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt
+        },
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": prompt,
+                }
+            ] + [
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/jpeg;base64,{encode_image(filename)}"
+                    }
+                }
+                for filename in image_filenames
+            ]
+        }
+    ]
+
+    # Query the OpenAI model
+    response = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=max_tokens
+    )
+
+    # Return the response
+    return response.choices[0]
+
+
+client = OpenAI()
