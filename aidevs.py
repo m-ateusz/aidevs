@@ -1,8 +1,12 @@
 import base64
 import os
+from typing import Optional
 import requests
-
+from joblib import Memory
 from openai import OpenAI
+
+# Set up a caching directory
+memory = Memory("_cache_dir", verbose=1)
 
 
 def send_task(task: str, answer, url: str = 'https://centrala.ag3nts.org/report'):
@@ -36,7 +40,6 @@ def send_task(task: str, answer, url: str = 'https://centrala.ag3nts.org/report'
         print(f"POST request failed. Status code: {post_response.status_code}")
     
 
-
 def encode_image(image_path:str) -> str:
     """
     Encodes an image file to a base64 string.
@@ -49,6 +52,8 @@ def encode_image(image_path:str) -> str:
     """
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
+
+
 def generate_image_completion(
         prompt: str,
         image_filenames: list[str],
@@ -106,6 +111,45 @@ def generate_image_completion(
 
     # Return the response
     return response.choices[0]
+
+
+@memory.cache
+def answer_question(
+        question: str,
+        system_prompt: Optional[str] = None,
+        max_tokens:int = 5,
+        model:str='gpt-4o-mini'
+    ) -> str:
+    """
+    Zwraca odpowiedź na pojedyncze pytanie `question` z modelu GPT-4.
+    
+    Parameters:
+    - question: Treść pytania.
+    - system_prompt: Opcjonalny prompt systemowy (np. dodatkowy kontekst).
+    - max_tokens: Maksymalna liczba tokenów w odpowiedzi.
+    - model: Nazwa modelu OpenAI do użycia.
+    
+    Returns:
+    - str: Odpowiedź na pytanie.
+    """
+    try:
+
+        # Konfiguracja promptu systemowego, jeśli podany
+        messages = [{"role": "user", "content": question}]
+        if system_prompt:
+            messages.insert(0, {"role": "system", "content": system_prompt})
+
+        # Wykonaj zapytanie do modelu
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens
+        )
+
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 client = OpenAI()
