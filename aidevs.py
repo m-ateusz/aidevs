@@ -1,6 +1,6 @@
 import base64
 import os
-from typing import Optional
+from typing import Optional, Dict, Any
 import requests
 from joblib import Memory
 from openai import OpenAI
@@ -9,30 +9,33 @@ from openai import OpenAI
 memory = Memory("_cache_dir", verbose=1)
 
 
-def send_task(task: str, answer, url: str = 'https://centrala.ag3nts.org/report'):
+def send_task(task: str, answer, url: str = None):
     """
     Wysyła zadanie do serwera API z podaną nazwą zadania i odpowiedzią.
     
     Parameters:
         task (str): nazwa zadania.
         answer: Obiekt odpowiedzi, która ma być wysłana.
-        api_url (str): URL endpointu, domyślnie 'https://centrala.ag3nts.org/report'
+        url (str): Optional URL override. If None, uses default from environment.
     """
-    
-    # Pobranie klucza API ze zmiennej środowiskowej
     api_key = os.getenv('AIDEVS_API_KEY')
     if not api_key:
         raise EnvironmentError("Nie znaleziono klucza API w zmiennych środowiskowych.")
 
-    # Przygotowanie payloadu
-    payload: dict[str, str] = {
+    base_url = os.getenv('AIDEVS_BASE_URL')
+    if not base_url:
+        raise EnvironmentError("AIDEVS_BASE_URL not found in environment variables")
+
+    # Use provided URL or construct from base URL
+    report_url = url or f"{base_url}/report"
+
+    payload = {
         "task": task,
         "apikey": api_key,
-        "answer": answer  # Odpowiedź przekazana jako string
+        "answer": answer
     }
 
-    # Wykonanie żądania POST
-    post_response = requests.post(url, json=payload)
+    post_response = requests.post(report_url, json=payload)
     print(post_response.text)
     if post_response.status_code == 200:
         print("POST request successful!")
@@ -150,6 +153,56 @@ def answer_question(
 
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+def generate_image(
+    prompt: str,
+    size: str = "1024x1024",
+    quality: str = "standard",
+    model: str = "dall-e-3"
+) -> str:
+    """
+    Generates an image using OpenAI's DALL-E model and returns the URL.
+    
+    Parameters:
+    - prompt (str): The description of the image to generate
+    - size (str): Size of the image (default: "1024x1024")
+    - quality (str): Quality of the image (default: "standard")
+    - model (str): The model to use (default: "dall-e-3")
+    
+    Returns:
+    - str: URL of the generated image
+    """
+    try:
+        response = client.images.generate(
+            model=model,
+            prompt=prompt,
+            size=size,
+            quality=quality,
+            n=1
+        )
+        return response.data[0].url
+    except Exception as e:
+        raise Exception(f"Error generating image: {str(e)}")
+
+
+def fetch_data(url: str) -> Dict[str, Any]:
+    """
+    Fetches JSON data from a given URL and returns it as a dictionary.
+    
+    Parameters:
+    - url (str): The URL to fetch data from
+    
+    Returns:
+    - Dict[str, Any]: The JSON response as a dictionary
+    
+    Raises:
+    - Exception: If the request fails or returns non-200 status code
+    """
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch data: {response.status_code}")
+    return response.json()
 
 
 client = OpenAI()

@@ -4,8 +4,8 @@ from aidevs import answer_question
 
 def solve_form_task():
     # Fetch the page with the question
-    url = ... # FIXME: redacted for git due to security reasons, subdomain is xyz
-    
+    url = "https://xyz.ag3nts.org/" # FIXME: redacted for git due to security reasons, subdomain is xyz
+
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
@@ -14,6 +14,7 @@ def solve_form_task():
     
     # Get answer using the local aidevs module
     answer = answer_question(question, system_prompt='Answer using only one word or one number only!')
+    print(f"Answer: {answer}")
     
     # Prepare form data
     form_data = {
