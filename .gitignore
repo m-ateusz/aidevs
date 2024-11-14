@@ -162,4 +162,8 @@ cython_debug/
 #.idea/
 _cache_dir/
 data/
+temp_data/
 aidevs3
+aidevs_api_key
+2024-04-17_api_key
+
