@@ -63,7 +63,7 @@ def generate_image_completion(
         prompt: str,
         image_filenames: list[str],
         system_prompt: str = "",
-        model: str = "gpt-4-vision-preview",
+        model: str = "gpt-4o-mini",
         max_tokens: int = 500
 ) -> str:
     """
@@ -248,6 +248,24 @@ def fetch_data(url: str) -> Dict[str, Any]:
     if response.status_code != 200:
         raise Exception(f"Failed to fetch data: {response.status_code}")
     return response.json()
+
+def fetch_text(url: str) -> str:
+    """
+    Fetches text data from a given URL and returns it as a string.
+    
+    Parameters:
+    - url (str): The URL to fetch text from
+    
+    Returns:
+    - str: The text response
+    
+    Raises:
+    - Exception: If the request fails or returns non-200 status code
+    """
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch text: {response.status_code}")
+    return response.text
 
 
 def download_and_extract_zip(zip_url: str, output_folder: str = "temp_data") -> str:
