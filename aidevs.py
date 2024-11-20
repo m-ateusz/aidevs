@@ -501,4 +501,18 @@ def run_ocr(image_path: str) -> str:
         return ""
 
 
+@memory.cache
+def get_embedding(text: str) -> list[float]:
+    """Get embedding for text using local Gemma model"""
+    url = "http://localhost:11434/api/embeddings"
+    
+    data = {
+        'model': 'gemma2:27b',
+        'prompt': text
+    }
+    
+    response = requests.post(url, json=data)
+    return response.json()['embedding']
+
+
 client = OpenAI()
