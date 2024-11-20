@@ -11,7 +11,7 @@ import zipfile
 memory = Memory("_cache_dir", verbose=1)
 
 
-def send_task(task: str, answer, url: str = None):
+def send_task(task: str, answer, url: str = None, payload_name: str = 'answer'):
     """
     Wysyła zadanie do serwera API z podaną nazwą zadania i odpowiedzią.
     
@@ -19,6 +19,7 @@ def send_task(task: str, answer, url: str = None):
         task (str): nazwa zadania.
         answer: Obiekt odpowiedzi, która ma być wysłana.
         url (str): Optional URL override. If None, uses default from environment.
+        payload_name (str): Name of the payload field (default: 'answer')
     """
     api_key = os.getenv('AIDEVS_API_KEY')
     if not api_key:
@@ -34,7 +35,7 @@ def send_task(task: str, answer, url: str = None):
     payload = {
         "task": task,
         "apikey": api_key,
-        "answer": answer
+        payload_name: answer
     }
 
     post_response = requests.post(report_url, json=payload)
@@ -43,6 +44,7 @@ def send_task(task: str, answer, url: str = None):
         print("POST request successful!")
     else:
         print(f"POST request failed. Status code: {post_response.status_code}")
+    return post_response.json()
     
 
 def encode_image(image_path:str) -> str:
