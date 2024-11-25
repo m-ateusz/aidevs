@@ -39,7 +39,7 @@ def send_task(task: str, answer, url: str = None, payload_name: str = 'answer'):
     }
 
     post_response = requests.post(report_url, json=payload)
-    print(post_response.text)
+    # print(post_response.text)
     if post_response.status_code == 200:
         print("POST request successful!")
     else:
