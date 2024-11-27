@@ -14,7 +14,7 @@ def main():
               '2024-11-12_report-09-sektor_C2.txt': 'patrol, peryferie, zachodni, czujniki, brak sygnałów, obszar, anomalie, monitoring, bezpieczeństwo'}
 
     # Send the answer to the task endpoint
-    send_task("dokumenty", answer)
+    send_task("research", ['01', '02', '10'])
 
 if __name__ == "__main__":
     main() 
